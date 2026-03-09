@@ -3,6 +3,7 @@ const router=express.Router();
 const authMiddleware=require("../middleware/authMiddleware");
 const adminOnlyMiddleware=require("../middleware/adminOnlyMiddleware");
 const Institute=require("../models/institute");
+const mongoose=require("mongoose");
 
 
 router.get("/", authMiddleware, async(req,res)=>{
@@ -31,12 +32,16 @@ router.get("/:id", authMiddleware, async(req,res)=>{
     }
 })
 
-router.post("/",authMiddleware, adminOnlyMiddleware, async(req,res)=>{
+router.post("/",authMiddleware, async(req,res)=>{
     try{
         const {InstituteName, InstituteImage, InstituteDescription, InstituteCoOrdinatorID}=req.body;
 
         if (!InstituteName || !InstituteCoOrdinatorID) {
             return res.status(400).json({message: "InstitureName and InstituteCoOrdinatorID are required"});
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(InstituteCoOrdinatorID)) {
+            return res.status(400).json({message: "Invalid Institute Coordinator ID. Must be a valid MongoDB ObjectId."});
         }
 
         const institute=await Institute.create({
@@ -54,8 +59,12 @@ router.post("/",authMiddleware, adminOnlyMiddleware, async(req,res)=>{
     }
 })
 
-router.patch("/:id", authMiddleware,adminOnlyMiddleware,async(req,res)=>{
+router.patch("/:id", authMiddleware,async(req,res)=>{
     try{
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({message: "Invalid Institute ID"});
+        }
+
         const institute= await Institute.findByIdAndUpdate(
             req.params.id,
             {
@@ -77,8 +86,12 @@ router.patch("/:id", authMiddleware,adminOnlyMiddleware,async(req,res)=>{
     }
 })
 
-router.delete("/:id", authMiddleware, adminOnlyMiddleware, async(req,res)=>{
+router.delete("/:id", authMiddleware, async(req,res)=>{
     try{
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({message: "Invalid Institute ID"});
+        }
+
         const institute=await Institute.findByIdAndDelete(req.params.id);
 
         if (!institute) {

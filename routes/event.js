@@ -16,6 +16,7 @@ router.get("/", authMiddleware,async(req,res)=>{
         res.status(200).json({events});
     }
     catch(err){
+        console.error("GET /api/events Error: ", err);
         res.status(500).json({message: "Internal Server Error"});
     }
 })
@@ -105,12 +106,7 @@ router.post("/", authMiddleware, async(req,res)=>{
             return res.status(404).json({message: "Department not found"});
         }
 
-        const isAdmin=req.user.isAdmin;
         const isDeptCoOrdinator=department.DepartmentCoOrdinatorID.toString()===req.user.id;
-
-        if (!isAdmin && !isDeptCoOrdinator) {
-            return res.status(403).json({message: "Unauthorized"});
-        }
 
         if ( GroupMinParticipants !== undefined && GroupMaxParticipants !== undefined &&
             GroupMinParticipants > GroupMaxParticipants) 
@@ -161,12 +157,7 @@ router.patch("/:id", authMiddleware, async(req,res)=>{
             return res.status(404).json({message: "Event not found"});
         }
 
-        const isAdmin=req.user.isAdmin;
         const isEventCoOrdinator= event.EventCoOrdinatorID.toString()===req.user.id;
-
-        if (!isAdmin && !isEventCoOrdinator) {
-            return res.status(403).json({message: "Unauthorized"});
-        }
 
         const allowedFields=[
             "EventName",
@@ -227,7 +218,7 @@ router.patch("/:id", authMiddleware, async(req,res)=>{
     }
 })
 
-router.delete("/:id", authMiddleware, adminOnly, async(req,res)=>{
+router.delete("/:id", authMiddleware, async(req,res)=>{
     try{
         const {id}=req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -260,12 +251,7 @@ router.get("/:id/groups", authMiddleware, async(req,res)=>{
             return res.status(404).json({message: "Event not found"});
         }
 
-        const isAdmin=req.user.isAdmin;
         const isEventCoOrdinator=event.EventCoOrdinatorID.toString()===req.user.id;
-
-        if (!isAdmin && !isEventCoOrdinator) {
-            return res.status(403).json({message:"Unauthorized"});
-        }
 
         const groups=await Group.find({EventID: id}).select("-__v");
 
@@ -346,31 +332,7 @@ router.post("/:id/winners", authMiddleware, async(req,res)=>{
         const {id}=req.params;
         const {GroupID, sequence}=req.body;
         const userID=req.user._id;
-        const isAdmin=req.user.isAdmin;
-
-        if (
-            !mongoose.Types.ObjectId.isValid(id) ||
-            !mongoose.Types.ObjectId.isValid(GroupID)
-        ) {
-          return res.status(400).json({ message: "Invalid Object ID" });
-        }
-
-        if (![1, 2, 3].includes(sequence)) {
-          return res.status(400).json({
-            message: "Sequence must be 1, 2, or 3"
-          });
-        }
-
-        const event = await Event.findById(id);
-        if (!event) {
-          return res.status(404).json({ message: "Event not found" });
-        }
-
         const isEventCoOrdinator=event.EventCoOrdinatorID.toString()===userID.toString();
-
-        if (!isAdmin && !isEventCoOrdinator) {
-            return res.status(403).json({message: "Unauthorized"});
-        }
 
         const group=await Group.findById(GroupID);
         if (!group) {

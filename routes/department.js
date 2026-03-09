@@ -59,12 +59,7 @@ router.post("/", authMiddleware, async(req,res)=>{
             return res.status(404).json({message: "Institute not found"});
         }
 
-        const isAdmin=req.user.isAdmin;
         const isInstituteCoOrdinator=institute.InstituteCoOrdinatorID.toString()===req.user.id;
-
-        if (!isAdmin && !isInstituteCoOrdinator) {
-            return res.status(403).json({message: "Unauthorized"});
-        }
 
         const department=await Department.create({
             DepartmentName,
@@ -95,12 +90,7 @@ router.patch("/:id", authMiddleware, async(req,res)=>{
             return res.status(404).json({message: "Department not found"});
         }
 
-        const isAdmin=req.user.isAdmin;
         const isDepartmentCoOrdinator=department.DepartmentCoOrdinatorID.toString()===req.user.id;
-
-        if (!isAdmin && !isDepartmentCoOrdinator) {
-            return res.status(403).json({message: "Unauthorized"});
-        }
 
         const allowedFields=[
             "DepartmentName",
@@ -138,7 +128,7 @@ router.patch("/:id", authMiddleware, async(req,res)=>{
     }
 })
 
-router.delete("/:id",authMiddleware, adminOnly, async(req,res)=>{
+router.delete("/:id",authMiddleware, async(req,res)=>{
     try{
 
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
