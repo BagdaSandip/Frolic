@@ -37,7 +37,7 @@ router.post("/",authMiddleware, async(req,res)=>{
         const {InstituteName, InstituteImage, InstituteDescription, InstituteCoOrdinatorID}=req.body;
 
         if (!InstituteName || !InstituteCoOrdinatorID) {
-            return res.status(400).json({message: "InstitureName and InstituteCoOrdinatorID are required"});
+            return res.status(400).json({message: "InstituteName and InstituteCoOrdinatorID are required"});
         }
 
         if (!mongoose.Types.ObjectId.isValid(InstituteCoOrdinatorID)) {

@@ -16,6 +16,17 @@ router.get("/", authMiddleware, adminOnlyMiddleware,async(req,res)=>{
     }
 })
 
+router.get("/list", authMiddleware, async(req,res)=>{
+    try{
+        const users= await User.find().select("_id UserName EmailAddress");
+
+        res.status(200).json({users});
+    }
+    catch(err){
+        res.status(500).json({message: "Internal Server Error"})
+    }
+})
+
 router.get("/:id", authMiddleware,selfOrAdminMiddleware, async(req,res)=>{
     try{
         const user= await User.findById(req.params.id).select("-UserPassword");
