@@ -10,7 +10,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.patch("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Object ID" });
@@ -77,7 +77,7 @@ router.patch("/:id", authMiddleware, async (req, res) => {
 router.delete("/:id", authMiddleware, async(req,res)=>{
   try{
     const {id}=req.params;
-    const userId=req.user._id;
+    const userId=req.user.id;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({message: "Invalid Object ID"});

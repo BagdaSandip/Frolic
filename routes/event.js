@@ -331,8 +331,19 @@ router.post("/:id/winners", authMiddleware, async(req,res)=>{
     try{
         const {id}=req.params;
         const {GroupID, sequence}=req.body;
-        const userID=req.user._id;
+        const userID=req.user.id;
+        const isAdmin=req.user.isAdmin;
+
+        const event = await Event.findById(id);
+        if(!event) {
+            return res.status(404).json({message: "Event not found"});
+        }
+
         const isEventCoOrdinator=event.EventCoOrdinatorID.toString()===userID.toString();
+        
+        if (!isAdmin && !isEventCoOrdinator) {
+            return res.status(403).json({message: "Unauthorized"});
+        }
 
         const group=await Group.findById(GroupID);
         if (!group) {

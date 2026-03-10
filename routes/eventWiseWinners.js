@@ -10,7 +10,7 @@ router.patch("/:id", authMiddleware, async (req, res) => {
     try{
         const { id } = req.params;
         const { sequence } = req.body;
-        const userId = req.user._id;
+        const userId = req.user.id;
         const isAdmin = req.user.isAdmin;
         
         if (!mongoose.Types.ObjectId.isValid(id)) {
