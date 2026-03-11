@@ -192,18 +192,37 @@ router.post("/:id/participants", authMiddleware, async(req,res)=>{
             return res.status(400).json({message: "ParticipantName and ParticipantEnrollment are required"});
         }
 
-        const group=await Group.findById(id);
+        const group = await Group.findById(id).populate("EventID");
         if (!group) {
             return res.status(404).json({message: "Group not found"});
         }
 
-        const isGroupLeader=await Participant.exists({
+        const isAdmin = req.user.isAdmin;
+        const userIdStr = req.user.id.toString();
+        
+        // group.EventID is now the full Event document.
+        const isEventCoOrdinator = group.EventID && 
+                                   group.EventID.EventCoOrdinatorID && 
+                                   group.EventID.EventCoOrdinatorID.toString() === userIdStr;
+                                   
+        const isGroupCreator = group.ModifiedBy && group.ModifiedBy.toString() === userIdStr;
+
+        const isGroupLeader = await Participant.exists({
             GroupID: id,
             IsGroupLeader: true,
             ModifiedBy: req.user.id
         });
 
-        if (!isGroupLeader) {
+        if (!isAdmin && !isEventCoOrdinator && !isGroupCreator && !isGroupLeader) {
+            console.log("Unauthorized Participant Add:", {
+                userId: userIdStr,
+                isAdmin,
+                isEventCoOrdinator,
+                isGroupCreator,
+                isGroupLeader,
+                groupModifiedBy: group.ModifiedBy ? group.ModifiedBy.toString() : null,
+                eventCoordinatorId: (group.EventID && group.EventID.EventCoOrdinatorID) ? group.EventID.EventCoOrdinatorID.toString() : null
+            });
             return res.status(403).json({message: "Unauthorized"});
         }
 
@@ -215,6 +234,9 @@ router.post("/:id/participants", authMiddleware, async(req,res)=>{
             return res.status(400).json({message: "Participant already exists"});
         }
 
+        const participantCount = await Participant.countDocuments({ GroupID: id });
+        const isFirstParticipant = participantCount === 0;
+
         const participant=await Participant.create({
             ParticipantName,
             ParticipantEnrollmentNumber,
@@ -222,7 +244,7 @@ router.post("/:id/participants", authMiddleware, async(req,res)=>{
             ParticipantCity,
             ParticipantMobile,
             ParticipantEmail,
-            IsGroupLeader: false,        
+            IsGroupLeader: isFirstParticipant,        
             GroupID: id,
             ModifiedBy: req.user.id
         });
